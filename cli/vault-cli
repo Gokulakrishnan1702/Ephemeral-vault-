@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# POSIX shell wrapper for vault-cli
+DIR="$(cd "$(dirname "$0")" && pwd)"
+node "$DIR/vault-cli.js" "$@"

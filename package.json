@@ -1,0 +1,29 @@
+{
+  "name": "ephemeral-secret-vault",
+  "version": "1.0.0",
+  "description": "Enterprise-grade self-destructing secret-sharing platform with AES-256-GCM encryption and safe burning",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "start": "npm --prefix backend run start",
+    "test:security": "npm --prefix backend run test",
+    "cli": "node cli/vault-cli.js"
+  },
+  "keywords": [
+    "encryption",
+    "aes-256-gcm",
+    "ephemeral",
+    "zero-knowledge",
+    "vault",
+    "cybersecurity",
+    "secret-sharing",
+    "self-destruct"
+  ],
+  "author": "Ephemeral Secret Vault Team",
+  "license": "MIT"
+}

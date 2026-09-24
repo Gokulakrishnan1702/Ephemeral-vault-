@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #050711;
+    color: #f1f5f9;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  code, pre {
+    font-family: 'Fira Code', monospace;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #080c1d;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #06b6d4;
+}
+
+/* Glassmorphism & Cyber Glow utilities */
+.glass-panel {
+  background: rgba(13, 19, 38, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+}
+
+.glass-panel-danger {
+  background: rgba(30, 10, 20, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+.cyber-gradient-text {
+  background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 50%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cyber-glow-box {
+  box-shadow: 0 0 35px -5px rgba(6, 182, 212, 0.25);
+}
+
+.cyber-glow-danger {
+  box-shadow: 0 0 35px -5px rgba(244, 63, 94, 0.35);
+}
+
+.cyber-grid-bg {
+  background-image: radial-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+}

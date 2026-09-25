@@ -25,5 +25,8 @@
     "self-destruct"
   ],
   "author": "Ephemeral Secret Vault Team",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
 }

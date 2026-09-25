@@ -36,14 +36,31 @@ export const SecretCreatedPage: React.FC<SecretCreatedPageProps> = ({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [showQrModal, setShowQrModal] = useState(false);
 
-  // Link type selection: 'public' | 'lan' | 'local'
-  const [linkType, setLinkType] = useState<'public' | 'lan' | 'local'>('public');
+  // Check if a live public tunnel is actually active and not private/local
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+  const localUrl: string = `${currentOrigin}/view/${data.id}`;
+  const lanUrl: string = data.lan_url || `http://172.20.107.204:5173/view/${data.id}`;
 
-  const publicUrl = data.public_url || (data.view_url.startsWith('http') ? data.view_url : `https://photographs-nevertheless-forest-inline.trycloudflare.com/view/${data.id}`);
-  const lanUrl = data.lan_url || `http://10.90.134.102:3000/view/${data.id}`;
-  const localUrl = data.local_url || `http://localhost:5173/view/${data.id}`;
+  const hasLivePublic = Boolean(
+    data.public_url &&
+    data.public_url.startsWith('http') &&
+    !data.public_url.includes('photographs-nevertheless-forest-inline') &&
+    !data.public_url.includes('localhost') &&
+    !data.public_url.includes('127.0.0.1') &&
+    !data.public_url.includes('172.') &&
+    !data.public_url.includes('192.168.') &&
+    !data.public_url.includes('10.')
+  );
 
-  const currentShareUrl = linkType === 'public' ? publicUrl : linkType === 'lan' ? lanUrl : localUrl;
+  const publicUrl: string = (hasLivePublic && data.public_url) ? data.public_url : '';
+
+  // Default to 'local' (Current Device) so the link ALWAYS works out of the box!
+  const [linkType, setLinkType] = useState<'local' | 'lan' | 'public'>(
+    hasLivePublic ? 'public' : 'local'
+  );
+
+  const currentShareUrl: string =
+    linkType === 'public' && publicUrl ? publicUrl : linkType === 'lan' ? lanUrl : localUrl;
 
   useEffect(() => {
     QRCodeLib.toDataURL(currentShareUrl, {
@@ -70,16 +87,19 @@ export const SecretCreatedPage: React.FC<SecretCreatedPageProps> = ({
     }
   };
 
+  const handleOpenLink = () => {
+    window.open(currentShareUrl, '_blank');
+  };
+
   const handleShareWhatsApp = () => {
-    // Send the GLOBAL PUBLIC URL so any phone or system can open it!
-    const text = encodeURIComponent(`Here is a secure self-destructing secret link:\n${publicUrl}`);
+    const text = encodeURIComponent(`Here is a secure self-destructing secret link:\n${currentShareUrl}`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
   const handleShareEmail = () => {
     const subject = encodeURIComponent('Secure Encrypted Secret Link');
     const body = encodeURIComponent(
-      `You have been sent a secure, self-destructing secret. Click the public link below to safely reveal and burn it:\n\n${publicUrl}\n\nNote: Opening the GET link is safe; clicking Reveal burns it permanently.`
+      `You have been sent a secure, self-destructing secret. Click the link below to safely reveal and burn it:\n\n${currentShareUrl}\n\nNote: Opening the GET link is safe; clicking Reveal burns it permanently.`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -116,7 +136,7 @@ export const SecretCreatedPage: React.FC<SecretCreatedPageProps> = ({
         </p>
       </div>
 
-      {/* Main Secure URL Box with Public / LAN / Local tabs */}
+      {/* Main Secure URL Box with Local / LAN / Public tabs */}
       <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-cyan-500/40 shadow-2xl backdrop-blur-md space-y-5">
         
         {/* Network Reach Selector */}
@@ -131,17 +151,20 @@ export const SecretCreatedPage: React.FC<SecretCreatedPageProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button
               type="button"
-              onClick={() => setLinkType('public')}
+              onClick={() => setLinkType('local')}
               className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
-                linkType === 'public'
+                linkType === 'local'
                   ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 shadow-glow-cyan'
                   : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Globe className="w-4 h-4 text-cyan-400 shrink-0" />
+              <Laptop className="w-4 h-4 text-cyan-400 shrink-0" />
               <div>
-                <div className="text-xs font-bold leading-none">Global Public Link</div>
-                <div className="text-[10px] text-slate-400 mt-1">WhatsApp & Any System</div>
+                <div className="text-xs font-bold leading-none flex items-center gap-1.5">
+                  <span>Localhost</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/30 text-cyan-300 font-mono">100% Works</span>
+                </div>
+                <div className="text-[10px] text-slate-400 mt-1">This Device / Browser</div>
               </div>
             </button>
 
@@ -163,49 +186,73 @@ export const SecretCreatedPage: React.FC<SecretCreatedPageProps> = ({
 
             <button
               type="button"
-              onClick={() => setLinkType('local')}
+              onClick={() => setLinkType('public')}
               className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
-                linkType === 'local'
-                  ? 'bg-sky-500/20 border-sky-400 text-sky-200'
+                linkType === 'public'
+                  ? 'bg-sky-500/20 border-sky-400 text-sky-200 shadow-glow-cyan'
                   : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Laptop className="w-4 h-4 text-sky-400 shrink-0" />
+              <Globe className="w-4 h-4 text-sky-400 shrink-0" />
               <div>
-                <div className="text-xs font-bold leading-none">Localhost</div>
-                <div className="text-[10px] text-slate-400 mt-1">This Device Only</div>
+                <div className="text-xs font-bold leading-none">Global Public Link</div>
+                <div className="text-[10px] text-slate-400 mt-1">
+                  {hasLivePublic ? 'Worldwide Active' : 'Requires Public Tunnel'}
+                </div>
               </div>
             </button>
           </div>
         </div>
 
-        {/* Current Active URL Input & Copy Button */}
+        {/* Current Active URL Input & Action Buttons */}
         <div className="space-y-2">
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <div className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-700 font-mono text-xs sm:text-sm text-cyan-300 truncate select-all">
-              {currentShareUrl}
+              {linkType === 'public' && !hasLivePublic ? (
+                <span className="text-amber-300 text-xs">
+                  ⚠️ No live public tunnel configured. Use Localhost for this machine, or Wi-Fi LAN for same network.
+                </span>
+              ) : (
+                currentShareUrl
+              )}
             </div>
-            <button
-              onClick={() => handleCopy()}
-              className={`w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shrink-0 ${
-                copied
-                  ? 'bg-emerald-600 text-white shadow-glow-green'
-                  : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-glow-cyan'
-              }`}
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copied!' : 'Copy Link'}
-            </button>
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => handleCopy()}
+                disabled={linkType === 'public' && !hasLivePublic}
+                className={`flex-1 sm:flex-initial px-5 py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shrink-0 ${
+                  copied
+                    ? 'bg-emerald-600 text-white shadow-glow-green'
+                    : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-glow-cyan disabled:opacity-40'
+                }`}
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
+
+              <button
+                onClick={handleOpenLink}
+                disabled={linkType === 'public' && !hasLivePublic}
+                title="Open secret link in new browser tab"
+                className="px-4 py-3.5 rounded-xl font-bold text-xs bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 flex items-center justify-center gap-1.5 transition-all shrink-0 disabled:opacity-40"
+              >
+                <span>Open</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           <div className="text-[11px] text-emerald-400 flex items-center gap-1.5 pt-1">
-            <Check className="w-3.5 h-3.5" />
+            <Check className="w-3.5 h-3.5 shrink-0" />
             <span>
-              {linkType === 'public'
-                ? '🌐 This public link is accessible from WhatsApp on mobile phones, any app, any website, and any computer worldwide!'
+              {linkType === 'local'
+                ? '✅ This localhost link works 100% on this computer. Click "Open" to reveal and verify immediately.'
                 : linkType === 'lan'
-                ? '🏠 Accessible from any phone, laptop, or tablet connected to the same Wi-Fi router (10.90.134.102).'
-                : '💻 Accessible only on this local computer.'}
+                ? `🏠 Accessible by devices connected to the same Wi-Fi router (${lanUrl.replace(/\/view\/.*/, '')}).`
+                : hasLivePublic
+                ? '🌐 Public link accessible worldwide via WhatsApp, Telegram, or any browser.'
+                : '⚠️ No public tunnel active. To test or share on this device, select the Localhost tab.'}
             </span>
           </div>
         </div>

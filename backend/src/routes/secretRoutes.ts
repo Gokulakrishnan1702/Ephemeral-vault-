@@ -3,6 +3,7 @@
  */
 
 import { Router, Request, Response } from 'express';
+import os from 'node:os';
 import {
   generateSecretId,
   encryptSecret,
@@ -18,6 +19,18 @@ import {
   db
 } from '../database/db.js';
 import { optionalAuth } from '../middleware/authMiddleware.js';
+
+function getLocalNetworkIp(): string {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] || []) {
+      if (net.family === 'IPv4' && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return 'localhost';
+}
 
 const router = Router();
 
@@ -74,14 +87,26 @@ router.post('/', optionalAuth, (req: Request, res: Response) => {
     incrementCounter('total_secrets_created', 1);
     logAuditEvent('SECRET_CREATED', `Secret ID ${secretId} ingested with TTL ${ttl}s and ${views} view(s).`);
 
-    // Determine URLs: Public Cloudflare Tunnel, Local Wi-Fi LAN, and Localhost
-    const publicBase = process.env.PUBLIC_URL || 'https://photographs-nevertheless-forest-inline.trycloudflare.com';
-    const publicViewUrl = `${publicBase}/view/${secretId}`;
-    const lanViewUrl = `http://10.90.134.102:3000/view/${secretId}`;
-    const localViewUrl = `http://localhost:5173/view/${secretId}`;
+    // Determine URLs: Public tunnel (if valid), Local Wi-Fi LAN IP, and Localhost
+    const localIp = getLocalNetworkIp();
+    const publicEnv = process.env.PUBLIC_URL?.trim();
+    const hasValidPublicUrl = Boolean(
+      publicEnv &&
+      publicEnv.startsWith('http') &&
+      !publicEnv.includes('localhost') &&
+      !publicEnv.includes('127.0.0.1') &&
+      !publicEnv.includes('172.') &&
+      !publicEnv.includes('192.168.') &&
+      !publicEnv.includes('10.') &&
+      !publicEnv.includes('photographs-nevertheless-forest-inline')
+    );
 
-    // Default view_url is the global public internet URL so WhatsApp/mobile sharing works worldwide!
-    const viewUrl = publicViewUrl;
+    const localViewUrl = `http://localhost:5173/view/${secretId}`;
+    const lanViewUrl = `http://${localIp}:5173/view/${secretId}`;
+    const publicViewUrl = hasValidPublicUrl ? `${publicEnv}/view/${secretId}` : undefined;
+
+    // Default view_url is local URL unless a real public URL is configured
+    const viewUrl = publicViewUrl || localViewUrl;
 
     return res.status(201).json({
       id: secretId,

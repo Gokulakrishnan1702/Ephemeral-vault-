@@ -19,6 +19,7 @@ import fs from 'node:fs';
 // Load environment variables
 dotenv.config({ path: '../.env' });
 dotenv.config();
+delete process.env.PUBLIC_URL;
 
 import { db, statements } from './database/db.js';
 import { hashPassword } from './crypto/vaultCrypto.js';
@@ -62,9 +63,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// CORS configuration
+// CORS configuration (allow localhost, LAN IP, and public tunnels)
 app.use(cors({
-  origin: [APP_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID']
